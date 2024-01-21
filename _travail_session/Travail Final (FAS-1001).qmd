@@ -1,0 +1,17 @@
+---
+title: "Travail Final (FAS-1001)"
+author: "Mohamed Chadli Bouzamondo"
+format: pdf
+editor: visual
+date: "TBD"
+---
+
+# Introduction
+
+### Problématique de recherche
+
+### Données et méthodes
+
+### Résultats
+
+# Conclusion

@@ -1,0 +1,29 @@
+---
+title: "TP1 (FAS-1001)"
+author: "Mohamed Chadli Bouzamondo"
+format: pdf
+editor: visual
+date: "22 Janvier 2024"
+---
+
+## Capture d'écran du terminal
+
+![](_tp1/Capture du Terminal.JPG){fig-align="center"}
+
+## Explication des commandes
+
+Pour la première étape, il a fallu utiliser la commande git clone. Elle permet de copier les fichiers du répertoire d'une autre personne et de les mettres sur mon ordinateur.
+
+Pour la deuxième étape, il a fallu utiliser la commande git branch \< fas_1001_Bouzamondo \> pour créer ma propre branche. Pour faire en sorte que la nouvelle branche que j'ai créé deviennent la branche principale il faut insérer la commande git checkout \< fas_1001_Bouzamondo \>.
+
+Pour la troisième étape, il a fallu aller sur R-Studio pour créer un document Quarto tout en spécifiant qu'il est en format PDF lorsque la sélection des différents formats est offerte.
+
+Pour la quatrième étape il a fallu Render le document. Cependant, il a fallu installer de multiples packages \[ install.packages (''quarto'') → quarto::quarto render (''hello.qmd'' → tinytex::install_tinytex → install.packages (''digest'')\] sur R-Studio afin que cette action puisse être performée. Ensuite, il a fallu aller sur le terminal afin de taper la commande git add \< /c/Users/15150135/Documents/Analyse Big Data/fas_1001/\_tp/TP1--FAS-1001-.pdf \> afin que les modifications puissent être ajoutée à l'historique du terminal Git. Pour vérifier que la commande a fonctionné on peu taper git status pour vérifier que notre fichier est bien présent. Finalement, la commande git commit -m ''Premier commit'' permet d'enregistrer nos modifications. Pour s"assurer que la commande a fonctionné on peut taper git log pour vérifier que notre commit est bien présent et sous le bon nom.
+
+Pour la cinquième étape, il a fallu revenir sur R-Studio pour créer un nouveau fichier Quarto avec un format PDF tout en générant de nouvelle sections de mon travail de sessions.
+
+Pour la sixième étape, il a fallu reproduire la commande git add \</c/Users/15150135/Documents/Analyse Big Data/fas_1001/\_travail_session/Travail-Final--FAS-1001-.pdf\> et git commit -m "Création du document du travail de session".
+
+Pour la septième étape, il a fallu taper la commande git log afin d'avoir accès à l'historique des actions que j'ai effectué. Par la suite, une capture d'écran du terminal Git a dû être insérée dans ce document Quarto.
+
+Pour la huitième étape, il a fallu taper la commande git push -u origin \<fas_1001_Bouzamondo\> que les modifications sur mon fichier que j'ai effectué puissent être vues sur GitHub.
