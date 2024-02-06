@@ -1,0 +1,116 @@
+---
+title: "Bouzamondo_TP2"
+format: pdf
+editor: visual
+date: 2024-02-05
+---
+
+## Données et méthodes
+
+#Libraries
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(haven)
+library(reshape2)
+library(reshape)
+library(dplyr)
+library(plyr)
+library(ggplot2)
+```
+
+#2 - Data
+
+```{r}
+
+Income_Survey_2019 <- read_por("/Users/15150135/Documents/Analyse Big Data/fas_1001/_tp/_tp2/MUP187_2019.por")
+
+Income_Survey_2020 <- read_por("/Users/15150135/Documents/Analyse Big Data/fas_1001/_tp/_tp2/MUP187_2020.por")
+
+Income_Survey_2021 <- haven::read_por("/Users/15150135/Documents/Analyse Big Data/fas_1001/_tp/_tp2/MUP187_2021.por")
+
+OECD_Housing <- read.csv("/Users/15150135/Documents/Analyse Big Data/fas_1001/_tp/_tp2/OECD_Housing_Prices_Data.csv")
+```
+
+## Annexe
+
+#3 - Nettoyage de variables
+
+#3.1 - Income_Survey_2019
+
+```{r}
+IS19_clean <- Income_Survey_2019 |>
+select(QD9, DATE) |>
+dplyr::rename(Annual_family_income = QD9) |>
+dplyr::mutate(DATE = as.character(DATE))
+```
+
+```{r}
+IS19_clean$DATE <- c("2019")
+```
+
+#3.2 - Income_Survey_2020
+
+```{r}
+IS20_clean <- Income_Survey_2020 |>
+select(QD9) |>
+dplyr::rename(Annual_family_income = QD9) 
+```
+
+```{r}
+IS20_clean$DATE <- c("2020")
+```
+
+#3.3 - Income_Survey_2021
+
+```{r}
+IS21_clean <- Income_Survey_2021 |>
+select(QD9) |>
+dplyr::rename(Annual_family_income = QD9) 
+```
+
+```{r}
+IS21_clean$DATE <- c("2021")
+```
+
+#3.4 - OECD_Housing
+
+```{r}
+OECD_Housing_clean <- OECD_Housing |>
+select(LOCATION, Value, TIME) |>
+dplyr::rename(DATE = TIME) |>
+dplyr::rename(House_prices = Value) |>
+subset(LOCATION == "USA")
+```
+
+```{r}
+OECD_Housing_clean$LOCATION <- NULL
+```
+
+#3.5 Fusion des données
+
+```{r}
+Income_Surveys_clean <- bind_rows(IS19_clean, IS20_clean, IS21_clean)
+
+```
+
+```{r}
+Data_clean <- merge(x = Income_Surveys_clean$Annual_family_income, y = OECD_Housing_clean$House_prices)
+```
+
+```{r}
+#setnames(Data_clean, "x", "Annual_family_income")
+#setnames(Data_clean, "y", "Housing_prices")
+```
+
+## Graphique
+
+```{r}
+ggplot(Data_clean, aes(x=x, y=y)) + 
+  geom_bar(stat = "identity") + 
+  scale_x_discrete(limits = c("1", "2", "3", "4", "5", "6", "7", "8", "9")) +
+  labs(x = "Annual_family_income", y ="Housing_prices")
+
+options(scipen=999)
+```
