@@ -1,0 +1,71 @@
+---
+title: "TP4 (FAS-1001)"
+author: "Mohamed Chadli Bouzamondo"
+format: docx
+editor: visual
+---
+
+```{r}
+##Librairies
+install.packages("rvest", repos = "http://cran.us.r-project.org")
+library(rvest) 
+library(lubridate) 
+library(tidyverse)
+```
+
+```{r}
+## Scraping ##
+UK_2024_poll <- read_html("https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election") |>
+
+## Sélection spécifique des tables du site web ##
+html_elements("table") |>
+
+## Chercher le deuxième table du site ##
+pluck(2) |>
+
+## Transformation en matrice de données ##
+html_table(fill = T) |>
+rename(Polling_firm = "Pollster",
+Date = "Datesconducted",
+Conservative = "Con",
+Labour_party = "Lab",
+Liberal_democrats = "Lib Dems",
+Scottish_national_party = "SNP",
+Green_Party = "Green",
+Reform_UK = "Reform") |>
+  
+## Supression des colognes et des variables qui ne sont pas nécéssaires ## 
+slice(-c(1, 32, 49, 45)) |>
+  
+select(-c(Client, Area))
+```
+
+ 
+
+```{r}
+glimpse(UK_2024_poll)
+```
+
+```{r}
+## Création d'une variable qui rassemble tout les partis politiques ##
+Parties <- c("Conservative", "Labour_party", "Liberal_democrats", "Scottish_national_party", "Green_Party", "Reform_UK")
+
+## Convertion des colonnes de pourcentage en numérique ##
+UK_2024_poll[Parties] <- lapply(UK_2024_poll[Parties], function(x) as.numeric(gsub("%", "", x)))
+
+# Création d'une nouvelle base de donnée incluant les nouvelles variables ##
+UK_2024_poll_v2 <- pivot_longer(UK_2024_poll, cols = all_of(Parties), names_to = "Political_parties", values_to = "Approval_rates")
+```
+
+```{r}
+
+## Création du graphique ##
+ggplot(UK_2024_poll_v2, aes(x = reorder(Political_parties, Approval_rates), y = Approval_rates/100, fill = Political_parties)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Political party", y = "Approval rates (%)", fill = "Political party") +
+  scale_fill_manual(values = c("Conservative" = "red", "Labour_party" = "blue", "Liberal_democrats" = "orange", 
+                                "Scottish_national_party" = "#663300", "Green_Party" = "green", "Reform_UK" = "purple")) +
+  theme(axis.text.x = element_text(hjust = 1)) + coord_flip() +
+  ggtitle("Approval rates of each UK political party, in 2024") + theme(plot.title = element_text(face = "bold", hjust = 0.5)) + theme(panel.background = element_rect(fill = "azure2")) + theme(panel.grid.major = element_line(color = "black", size = 0.5, linetype = "dotted")) + theme(panel.grid.minor = element_blank())
+
+```
