@@ -1,10 +1,623 @@
 ---
 title: "Travail Final (FAS-1001)"
 author: "Mohamed Chadli Bouzamondo"
-format: pdf
+format: docx
 editor: visual
 date: "TBD"
 ---
+
+```{r}
+## Libraries ##
+library(dplyr)
+#install.packages("foreign")
+library(foreign)
+#install.packages("haven")
+library(haven)
+#install.packages("readstata13")
+library(readstata13)
+library(tidyr)
+library(ggplot2)
+
+```
+
+```{r}
+## Importation des bases de données ##
+CES_2000 <- read_sav("/Users/15150135/Documents/Analyse Big Data/fas_1001/_travail_session/CES-E-2000_F1.sav")
+
+CES_2004 <- read_dta("/Users/15150135/Documents/Analyse Big Data/fas_1001/_travail_session/ces2004.dta")
+
+CES_2008 <- read_dta("/Users/15150135/Documents/Analyse Big Data/fas_1001/_travail_session/CES2008.dta")
+
+CES_2011 <- read_dta("/Users/15150135/Documents/Analyse Big Data/fas_1001/_travail_session/CES2011.dta")
+
+CES_2015 <- read_dta("/Users/15150135/Documents/Analyse Big Data/fas_1001/_travail_session/CES2015_Combined_Stata14.dta")
+
+CES_2019_on <- read_dta("/Users/15150135/Documents/Analyse Big Data/fas_1001/_travail_session/CES_2019_onl.dta")
+
+CES_2019_ph <- read_dta("/Users/15150135/Documents/Analyse Big Data/fas_1001/_travail_session/CES_2019_ph.dta")
+
+CES_2021 <- read_dta("/Users/15150135/Documents/Analyse Big Data/fas_1001/_travail_session/CES_2021.dta")
+```
+
+```{r}
+## Sélections des variables utiles (Codebook personnel) ##
+
+##Religion
+# Aucune religion  = 0
+# Protestant       = 1
+# Catholiques      = 2 
+# Islam            = 3 
+# Judaïsme         = 4 
+# Religion d'Asie  = 5
+# Autres chrétiens = 6 
+      
+
+##Importance_religion
+# Very important       = 1
+# Somewhat important   = 2
+# Not Very important   = 3
+# Not important at all = 4
+
+
+##Affiliation_politique
+# Liberal                                         = 1
+# Conservative                                    = 2
+# NPD                                             = 3
+# Bloc Québecois                                  = 4
+# Green                                           = 5
+# Another party                                   = 6
+# None of these/Don't know/ Prefer not to answer  = NA
+
+```
+
+```{r}
+## ------------------ Nettoyage CES_2000_1 ---------------------------- ##
+CES_2000_1 <- subset(CES_2000, select = c(cpsm10, cpsm10b, cpspla36, cpsk1b))
+
+
+
+CES_2000_1 <- CES_2000_1 |>
+mutate(Religion = case_when(
+                                        cpsm10 == 0 ~ 0,
+                                        cpsm10 == 1 ~ 1,
+                                        cpsm10 == 2 ~ 2,
+                                        cpsm10 == 3 ~ 3,
+                                        cpsm10 == 4 ~ 4,
+                                        cpsm10 == 5 ~ 5,
+                                        cpsm10 == 98 ~ NA,
+                                        cpsm10 == 99 ~ NA))
+
+CES_2000_1 <- CES_2000_1 |>
+mutate(Importance_religion = case_when(
+                                        cpsm10b == 1 ~ 1,
+                                        cpsm10b == 3 ~ 2,
+                                        cpsm10b == 5 ~ 3,
+                                        cpsm10b == 7 ~ 4,
+                                        cpsm10b == 8 ~ NA,
+                                        cpsm10b == 9 ~ NA))
+
+CES_2000_1 <- CES_2000_1 |>
+mutate(Axe_politique = case_when(
+                                        cpspla36 == 1 ~ 0,
+                                        cpspla36 == 3 ~ 10,
+                                        cpspla36 == 5 ~ 5,
+                                        cpspla36 == 7 ~ NA,
+                                        cpspla36 == 97 ~ NA,
+                                        cpspla36 == 98 ~ NA,
+                                        cpspla36 == 99 ~ NA))
+
+
+CES_2000_1 <- CES_2000_1 |>
+mutate(Affiliation_politique = case_when(
+                                        cpsk1b == 1 ~ 1,
+                                        cpsk1b == 2 ~ 4,
+                                        cpsk1b == 3 ~ 6,
+                                        cpsk1b == 4 ~ 2,
+                                        cpsk1b == 5 ~ 3,
+                                        cpsk1b == 7 ~ NA,
+                                        cpsk1b == 98 ~ NA,
+                                        cpsk1b == 99 ~ NA))
+
+
+CES_2000_1 <- CES_2000_1 |> select(-cpsm10, -cpsm10b, -cpspla36, -cpsk1b)
+
+## ------------------ Fin du nettoyage CES_2000_1 ---------------------------##
+```
+
+```{r}
+## ------------------ Nettoyage CES_2004_1 ---------------------------- ##
+CES_2004_1 <- subset(CES_2004, select = c(cps_s9, cps_s11, mbs_h10, cps_q1a))
+
+
+CES_2004_1 <- CES_2004_1 |>
+mutate(Affiliation_politique = case_when(
+                                        cps_q1a == 0 ~ NA,
+                                        cps_q1a == 1 ~ 1,
+                                        cps_q1a == 2 ~ 2,
+                                        cps_q1a == 3 ~ 3,
+                                        cps_q1a == 4 ~ 4,
+                                        cps_q1a == 5 ~ 6,
+                                        cps_q1a == 6 ~ 6,
+                                        cps_q1a == 8 ~ 5,
+                                        cps_q1a == 97 ~ 6,
+                                        cps_q1a == 98 ~ NA,
+                                        cps_q1a == 99 ~ NA))
+
+CES_2004_1 <- CES_2004_1 |>
+mutate(Religion =  case_when(
+                                        cps_s9 == 0 ~ 0,
+                                        cps_s9 == 1 ~ 1,
+                                        cps_s9 == 2 ~ 1,
+                                        cps_s9 == 3 ~ 5,
+                                        cps_s9 == 4 ~ 2,
+                                        cps_s9 == 5 ~ 6,
+                                        cps_s9 == 6 ~ 5,
+                                        cps_s9 == 7 ~ 6,
+                                        cps_s9 == 8 ~ 4,
+                                        cps_s9 == 9 ~ 1,
+                                        cps_s9 == 10 ~ 6,
+                                        cps_s9 == 11 ~ 3,
+                                        cps_s9 == 12 ~ 1,
+                                        cps_s9 == 13 ~ 1,
+                                        cps_s9 == 14 ~ 1,
+                                        cps_s9 == 15 ~ 5,
+                                        cps_s9 == 16 ~ 1,
+                                        cps_s9 == 17 ~ 6,
+                                        cps_s9 == 18 ~ 6,
+                                        cps_s9 == 19 ~ 1,
+                                        cps_s9 == 20 ~ 1,
+                                        cps_s9 == 97 ~ NA,
+                                        cps_s9 == 98 ~ 1,
+                                        cps_s9 == 99 ~ NA))
+
+CES_2004_1 <- CES_2004_1 |>
+mutate(Importance_religion = case_when(
+                                        cps_s11 == 1 ~ 1,
+                                        cps_s11 == 3 ~ 2,
+                                        cps_s11 == 5 ~ 3,
+                                        cps_s11 == 7 ~ 4,
+                                        cps_s11 == 8 ~ NA,
+                                        cps_s11 == 9 ~ NA))
+
+CES_2004_1 <- CES_2004_1 |>
+mutate(Axe_politique = case_when(
+                                        mbs_h10 == 0 ~ 0,
+                                        mbs_h10 == 10 ~ 10,
+                                        mbs_h10 == -9 ~ NA))
+
+
+CES_2004_1 <- CES_2004_1 |> select(-cps_q1a, -cps_s9, -cps_s11) 
+CES_2004_1 <- CES_2004_1 |> select(-mbs_h10) 
+
+## ------------------ Fin du nettoyage CES_2004_1 ---------------------------##
+```
+
+```{r}
+## ------------------ Nettoyage CES_2008_1 ---------------------------- ##
+CES_2008_1 <- subset(CES_2008, select = c(ces08_CPS_S9, ces08_CPS_S11,ces08_CPS_Q1A, ces08_PES_K1, ces08_MBS_I12))
+
+CES_2008_1 <- CES_2008_1 |>
+mutate(Religion =  case_when(
+                                        ces08_CPS_S9 == 0 ~ 0,
+                                        ces08_CPS_S9 == 1 ~ 1,
+                                        ces08_CPS_S9 == 2 ~ 1,
+                                        ces08_CPS_S9 == 3 ~ 5,
+                                        ces08_CPS_S9 == 4 ~ 2,
+                                        ces08_CPS_S9 == 5 ~ 6,
+                                        ces08_CPS_S9 == 6 ~ 5,
+                                        ces08_CPS_S9 == 7 ~ 6,
+                                        ces08_CPS_S9 == 8 ~ 4,
+                                        ces08_CPS_S9 == 9 ~ 1,
+                                        ces08_CPS_S9 == 10 ~ 6,
+                                        ces08_CPS_S9 == 11 ~ 3,
+                                        ces08_CPS_S9 == 12 ~ 1,
+                                        ces08_CPS_S9 == 13 ~ 1,
+                                        ces08_CPS_S9 == 14 ~ 1,
+                                        ces08_CPS_S9 == 15 ~ 5,
+                                        ces08_CPS_S9 == 16 ~ 1,
+                                        ces08_CPS_S9 == 17 ~ 6,
+                                        ces08_CPS_S9 == 18 ~ 6,
+                                        ces08_CPS_S9 == 19 ~ 1,
+                                        ces08_CPS_S9 == 20 ~ 1,
+                                        ces08_CPS_S9 == 97 ~ NA,
+                                        ces08_CPS_S9 == 98 ~ NA,
+                                        ces08_CPS_S9 == 99 ~ NA))
+
+CES_2008_1 <- CES_2008_1 |>
+mutate(Importance_religion = case_when(
+                                        ces08_CPS_S11 == 1 ~ 1,
+                                        ces08_CPS_S11 == 3 ~ 2,
+                                        ces08_CPS_S11 == 5 ~ 3,
+                                        ces08_CPS_S11 == 7 ~ 4,
+                                        ces08_CPS_S11 == 8 ~ NA,
+                                        ces08_CPS_S11 == 9 ~ NA))
+
+
+CES_2008_1 <- CES_2008_1 |>
+mutate(Axe_politique = case_when(
+                                        ces08_MBS_I12 == 0 ~ 0,
+                                        ces08_MBS_I12 == 10 ~ 10,
+                                        ces08_MBS_I12 == -9 ~ NA))
+
+
+
+CES_2008_1 <- CES_2008_1 %>%
+  mutate(feds_1 = case_when(
+                                ces08_CPS_Q1A == 0 ~ NA,
+                                ces08_CPS_Q1A == 1 ~ 1,
+                                ces08_CPS_Q1A == 2 ~ 2,
+                                ces08_CPS_Q1A == 3 ~ 3,
+                                ces08_CPS_Q1A == 4 ~ 4,
+                                ces08_CPS_Q1A == 5 ~ 5,
+                                ces08_CPS_Q1A == 97 ~ NA,
+                                ces08_CPS_Q1A == 98 ~ NA,
+                                ces08_CPS_Q1A == 99 ~ NA))
+
+
+CES_2008_1 <- CES_2008_1 %>%
+  mutate(feds_2 = case_when(
+                                ces08_PES_K1 == 0 ~ NA,
+                                ces08_PES_K1 == 1 ~ 1,
+                                ces08_PES_K1 == 2 ~ 2,
+                                ces08_PES_K1 == 3 ~ 3,
+                                ces08_PES_K1 == 4 ~ 4,
+                                ces08_PES_K1 == 5 ~ 5,
+                                ces08_PES_K1 == 97 ~ NA,
+                                ces08_PES_K1 == 98 ~ NA,
+                                ces08_PES_K1 == 99 ~ NA))                             
+
+CES_2008_1 <- CES_2008_1 %>%
+  mutate(Affiliation_politique = coalesce(feds_1, feds_2))
+                                
+
+CES_2008_1 <- CES_2008_1 |> select(-ces08_CPS_S9, -ces08_CPS_S11, -ces08_CPS_Q1A, -ces08_PES_K1, -feds_1, -feds_2)
+
+CES_2008_1 <- CES_2008_1 |> select(-ces08_MBS_I12)
+## ------------------ Fin du nettoyage CES_2008_1 -------------------------- ##
+```
+
+```{r}
+## ------------------ Nettoyage CES_2011_1 ---------------------------- ##
+
+CES_2011_1 <- subset(CES_2011, select = c(CPS11_80, CPS11_82, MBS11_K5, CPS11_71, PES11_59a))
+
+CES_2011_1 <- CES_2011_1 |>
+mutate(Religion =  case_when(
+                                        CPS11_80 == 0 ~ 0,
+                                        CPS11_80 == 1 ~ 1,
+                                        CPS11_80 == 2 ~ 1,
+                                        CPS11_80 == 3 ~ 5,
+                                        CPS11_80 == 4 ~ 1,
+                                        CPS11_80 == 5 ~ 6,
+                                        CPS11_80 == 6 ~ 5,
+                                        CPS11_80 == 7 ~ 6,
+                                        CPS11_80 == 8 ~ 4,
+                                        CPS11_80 == 9 ~ 1,
+                                        CPS11_80 == 10 ~ 6,
+                                        CPS11_80 == 11 ~ 3,
+                                        CPS11_80 == 12 ~ 1,
+                                        CPS11_80 == 13 ~ 1,
+                                        CPS11_80 == 14 ~ 1,
+                                        CPS11_80 == 15 ~ 5,
+                                        CPS11_80 == 16 ~ 1,
+                                        CPS11_80 == 17 ~ 6,
+                                        CPS11_80 == 18 ~ 6,
+                                        CPS11_80 == 19 ~ 1,
+                                        CPS11_80 == 20 ~ 1,
+                                        CPS11_80 == 97 ~ NA,
+                                        CPS11_80 == 98 ~ NA,
+                                        CPS11_80 == 99 ~ NA))
+
+CES_2011_1 <- CES_2011_1 |>
+mutate(Importance_religion = case_when(
+                                        CPS11_82 == 1 ~ 1,
+                                        CPS11_82 == 3 ~ 2,
+                                        CPS11_82 == 5 ~ 3,
+                                        CPS11_82 == 7 ~ 4,
+                                        CPS11_82 == 8 ~ NA,
+                                        CPS11_82 == 9 ~ NA))
+
+
+CES_2011_1 <- CES_2011_1 |>
+mutate(Axe_politique = case_when(
+                                        MBS11_K5 == 0 ~ 0,
+                                        MBS11_K5 == 10 ~ 10,
+                                        MBS11_K5 == -99 ~ NA))
+
+
+CES_2011_1 <- CES_2011_1 %>%
+  mutate(feds_1 = case_when(
+                                CPS11_71 == 0 ~ NA,
+                                CPS11_71 == 1 ~ 1,
+                                CPS11_71 == 2 ~ 2,
+                                CPS11_71 == 3 ~ 3,
+                                CPS11_71 == 4 ~ 4,
+                                CPS11_71 == 5 ~ 5,
+                                CPS11_71 == 6 ~ NA,
+                                CPS11_71 == 8 ~ NA,
+                                CPS11_71 == 9 ~ NA))
+
+
+CES_2011_1 <- CES_2011_1 %>%
+  mutate(feds_2 = case_when(
+                                PES11_59a == 0 ~ NA,
+                                PES11_59a == 1 ~ 1,
+                                PES11_59a == 2 ~ 2,
+                                PES11_59a == 3 ~ 3,
+                                PES11_59a == 4 ~ 4,
+                                PES11_59a == 5 ~ 5,
+                                PES11_59a == 6 ~ NA,
+                                PES11_59a == 8 ~ NA,
+                                PES11_59a == 9 ~ NA))                     
+
+
+CES_2011_1 <- CES_2011_1 %>%
+  mutate(Affiliation_politique = coalesce(feds_1, feds_2))
+
+
+CES_2011_1 <- CES_2011_1 |> select(-CPS11_80, -CPS11_82, -CPS11_71, -PES11_59a,  -MBS11_K5, -feds_1, -feds_2)
+## ------------------ Fin du nettoyage CES_2011_1 -------------------------- ##
+```
+
+```{r}
+## ------------------ Nettoyage CES_2015_1 ---------------------------- ##
+CES_2015_1 <- subset(CES_2015, select = c(religion, relig_imp, p_selfplace, p_pidthink))
+
+CES_2015_1 <- CES_2015_1 |>
+mutate(Affilition_politique = case_when(
+                                        p_pidthink == 6 ~ NA,
+                                        p_pidthink == 5 ~ 5,
+                                        p_pidthink == 4 ~ 4,
+                                        p_pidthink == 3 ~ 3,
+                                        p_pidthink == 2 ~ 2,
+                                        p_pidthink == 1 ~ 1,
+                                        p_pidthink == 7 ~ 6,
+                                        p_pidthink == 8 ~ NA,
+                                        p_pidthink == 9 ~ NA,
+                                        p_pidthink == 998 ~ NA,
+                                        p_pidthink == 1000 ~ NA))
+
+CES_2015_1 <- CES_2015_1 |>
+mutate(Religion =  case_when(
+                                        religion %in% c(1,2,9,12:14,16:19) ~ 1,
+                                        religion == 4 ~ 2,
+                                        religion %in% c(3,6,15) ~ 5,
+                                        religion %in% c(5,7,10,17) ~ 6,
+                                        religion == 8 ~ 4,
+                                        religion %in% c(20,24) ~ 0,
+                                        religion == 11 ~ 3,
+                                        religion %in% c(22,23,998,1000) ~ NA))
+
+CES_2015_1 <- CES_2015_1 |>
+mutate(Importance_religion = case_when(
+                                        	relig_imp == 1 ~ 1,
+                                        	relig_imp == 2 ~ 2,
+                                        	relig_imp == 3 ~ 3,
+                                        	relig_imp == 4 ~ 4,
+                                        	relig_imp == 5 ~ NA,
+                                        	relig_imp == 6 ~ NA,
+                                        	relig_imp == 998 ~ NA,
+                                        	relig_imp == 1000 ~ NA))
+
+CES_2015_1 <- CES_2015_1 %>%
+  rename(Axe_politique = p_selfplace)
+
+CES_2015_1 <- CES_2015_1 %>%
+  filter(Axe_politique != 1000)
+
+CES_2015_1 <- CES_2015_1 |> select(-religion, -relig_imp, -p_pidthink)
+
+CES_2015_1 <- CES_2015_1 %>%
+  rename(Affiliation_politique = Affilition_politique)
+
+## ----------------------- Fin nettoyage CES_2015_1 -------------------------##
+```
+
+```{r}
+## ------------------ Nettoyage et combinaison CES_2019_1 ------------------- ##
+
+## ----------------- Nettoyage CES_2019_on_1 --------------------- ##
+CES_2019_on1 <- subset(CES_2019_on, select = c(cps19_religion, cps19_rel_imp, cps19_lr_scale_bef_1, cps19_fed_id))
+
+CES_2019_on1 <- CES_2019_on1 |>
+mutate(Affiliation_politique = case_when(
+                                        cps19_fed_id == 6 ~ 6,
+                                        cps19_fed_id == 5 ~ 5,
+                                        cps19_fed_id == 4 ~ 4,
+                                        cps19_fed_id == 3 ~ 3,
+                                        cps19_fed_id == 2 ~ 2,
+                                        cps19_fed_id == 1 ~ 1,
+                                        cps19_fed_id == 7 ~ 6,
+                                        cps19_fed_id == 8 ~ NA,
+                                        cps19_fed_id == 9 ~ NA))
+
+CES_2019_on1 <- CES_2019_on1 |>
+mutate(Religion =  case_when(
+                                    cps19_religion %in% c(8,9,13,15:18,20) ~ 1,
+                                    cps19_religion == 10 ~ 2,
+                                    cps19_religion %in% c(4,7,3) ~ 5,
+                                    cps19_religion %in% c(11,12,14,19) ~ 6,
+                                    cps19_religion == 5 ~ 4,
+                                    cps19_religion %in% c(1,2) ~ 0,
+                                    cps19_religion == 6 ~ 3,
+                                    cps19_religion %in% c(22,23) ~ NA))
+
+CES_2019_on1 <- CES_2019_on1 |>
+mutate(Importance_religion = case_when(
+                                        	cps19_rel_imp == 1 ~ 1,
+                                        	cps19_rel_imp == 2 ~ 2,
+                                        	cps19_rel_imp == 3 ~ 3,
+                                        	cps19_rel_imp == 4 ~ 4,
+                                        	cps19_rel_imp == 5 ~ NA))
+
+CES_2019_on1 <- CES_2019_on1 %>%
+  rename(Axe_politique = cps19_lr_scale_bef_1)
+
+CES_2019_on1 <- CES_2019_on1 |> select(-cps19_religion, -cps19_rel_imp, -cps19_fed_id)
+```
+
+```{r}
+## ------------------ Nettoyage CES_2019_ph ------------------- ##
+CES_2019_ph1 <- subset(CES_2019_ph, select = c(q62, q63, q52))
+
+
+CES_2019_ph1 <- CES_2019_ph1 |>
+mutate(Affiliation_politique = case_when(
+                                        q52 == 6 ~ 6,
+                                        q52 == 5 ~ 5,
+                                        q52 == 4 ~ 4,
+                                        q52 == 3 ~ 3,
+                                        q52 == 2 ~ 2,
+                                        q52 == 1 ~ 1,
+                                        q52 == 7 ~ 6,
+                                        q52 %in% c(8,-8,-9) ~ NA))
+
+CES_2019_ph1 <- CES_2019_ph1 |>
+mutate(Religion =  case_when(
+                                    q62 %in% c(1,3,4,7,9,12,17,18,20) ~ 1,
+                                    q62 == 6 ~ 2,
+                                    q62 %in% c(5,10,11) ~ 5,
+                                    q62 %in% c(8,13,14,16) ~ 6,
+                                    q62 == 15 ~ 4,
+                                    q62 %in% c(21,-9) ~ 0,
+                                    q62 == 2 ~ 3,
+                                    q62 %in% c(22,-8) ~ NA))
+
+CES_2019_ph1 <- CES_2019_ph1 |>
+mutate(Importance_religion = case_when(
+                                        	q63 == 1 ~ 1,
+                                        	q63 == 2 ~ 2,
+                                        	q63 == 3 ~ 3,
+                                        	q63 == 4 ~ 4,
+                                        	q63 %in% c(-9,-8) ~ NA))
+
+
+CES_2019_ph1 <- CES_2019_ph1 |> select(-q62, -q63, -q52)
+
+
+CES_2019_1 <- bind_rows(CES_2019_on1, CES_2019_ph1)
+                        
+## ------------------ Nettoyage et combinaison CES_2019_1 ------------------ ##
+```
+
+```{r}
+## ------------------ Nettoyage CES_2021_1 --------------------------------- ##
+CES_2021_1 <- subset(CES_2021, select = c(cps21_religion, cps21_rel_imp, cps21_lr_scale_bef_1, cps21_fed_id))
+
+CES_2021_1 <- CES_2021_1 |>
+mutate(Affiliation_politique = case_when(
+                                        cps21_fed_id == 6 ~ 6,
+                                        cps21_fed_id == 5 ~ 5,
+                                        cps21_fed_id == 4 ~ 4,
+                                        cps21_fed_id == 3 ~ 3,
+                                        cps21_fed_id == 2 ~ 2,
+                                        cps21_fed_id == 1 ~ 1,
+                                        cps21_fed_id == 7 ~ 6,
+                                        cps21_fed_id == 8 ~ NA))
+
+CES_2021_1 <- CES_2021_1 |>
+mutate(Religion =  case_when(
+                                cps21_religion %in% c(8,9,13,15:18,20,21) ~ 1,
+                                    cps21_religion == 10 ~ 2,
+                                    cps21_religion %in% c(4,7,3) ~ 5,
+                                    cps21_religion %in% c(11,12,14,19) ~ 6,
+                                    cps21_religion == 5 ~ 4,
+                                    cps21_religion %in% c(1,2) ~ 0,
+                                    cps21_religion == 6 ~ 3,
+                                    cps21_religion %in% c(22,23) ~ NA))
+
+CES_2021_1 <- CES_2021_1 |>
+mutate(Importance_religion = case_when(
+                                        	cps21_rel_imp == 1 ~ 1,
+                                        	cps21_rel_imp == 2 ~ 2,
+                                        	cps21_rel_imp == 3 ~ 3,
+                                        	cps21_rel_imp == 4 ~ 4,
+                                        	cps21_rel_imp == 5 ~ NA))
+
+CES_2021_1 <- CES_2021_1 %>%
+  rename(Axe_politique = cps21_lr_scale_bef_1)
+
+CES_2021_1 <- CES_2021_1 %>%
+  filter(Axe_politique != -99)
+
+
+CES_2021_1 <- CES_2021_1 |> select(-cps21_religion, -cps21_rel_imp, -cps21_fed_id)
+## ----------------------- Fin nettoyage CES_2021_1 ------------------------ ##
+```
+
+```{r}
+## Combinaison des bases de données en CES_FINAL ##
+
+CES_Final_1 <- bind_rows(CES_2000_1, CES_2004_1, CES_2008_1, CES_2011_1, CES_2015_1, CES_2019_1, CES_2021_1)
+
+CES_FINAL <- CES_Final_1 %>% drop_na()
+
+summary(CES_FINAL)
+
+```
+
+```{r}
+## Graphique 1 ##
+ggplot(CES_FINAL, aes(x = as.character(Religion), y = Axe_politique, fill = as.character(Religion))) +
+  geom_boxplot() +
+  labs(
+    title = "Relation entre Religion et Axe politique",
+    x = "Religion",
+    y = "Axe politique (Gauche-Droite)"
+  ) +
+  scale_x_discrete(labels = c("0" = "Aucune religion", "1" = "Protestant", "2" = "Catholique", 
+                              "3" = "Islam", "4" = "Judaïsme", "5" = "Religions \nd'Asie", 
+                              "6" = "Autres chrétiens")) +
+  theme_minimal() +
+  guides(fill = FALSE) + theme(
+    plot.title = element_text(hjust = 0.5),  
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.ticks = element_line(color = "black", size = 0.2))
+
+```
+
+```{r}
+## Graphique 2 ##
+
+ggplot(CES_FINAL, aes(x = as.character(Importance_religion), y = Axe_politique, fill = as.character(Importance_religion))) +
+  geom_boxplot() +
+  labs(
+    title = "Relation entre l'Importance de la religion et l'Axe politique",
+    x = "Importance de la religion",
+    y = "Axe politique (Gauche-Droite)",
+    fill = "Religion"
+  ) +
+  theme_minimal() + scale_x_discrete(labels = c("1" = "Très important", "2" = "Un peu important", "3" = "Pas très important", "4" = "Pas important du tout")) +
+  guides(fill = FALSE) + theme(
+    plot.title = element_text(hjust = 0.5),  
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.title.x = element_text(vjust = -1), 
+    axis.ticks = element_line(color = "black", size = 0.2))
+```
+
+```{r}
+## Graphique 3 ##
+
+ggplot(CES_FINAL, aes(x = as.character(Affiliation_politique), y = Axe_politique, fill = as.character(Affiliation_politique))) +
+  geom_boxplot() +
+  labs(
+    title = "Relation entre l'Affiliation politique et l'Axe politique",
+    x = "Affiliation politique",
+    y = "Axe politique (Gauche-Droite)"
+  ) +
+  scale_x_discrete(labels = c("1" = "Libéraux", "2" = "Conservateurs", 
+                              "3" = "NPD", "4" = "Bloc Québecois", "5" = "Parti vert", 
+                              "6" = "Autres partis")) +
+  scale_fill_manual(values = c("1" = "#c91a1a", "2" = "#2563b0", 
+                               "3" = "orange", "4" = "white", "5" = "#00b05e", 
+                               "6" = "grey")) +
+  theme_minimal() +
+  guides(fill = FALSE) + theme(
+    plot.title = element_text(hjust = 0.5),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.title.x = element_text(vjust = -1), 
+    axis.ticks = element_line(color = "black", size = 0.2))
+```
 
 # Introduction
 
